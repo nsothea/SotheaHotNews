@@ -4030,5 +4030,35 @@
     ],
     "has_video": true,
     "video_url": "https://www.youtube.com/embed/HjhBASxczCM"
+  },
+  "https://news.google.com/rss/articles/CBMioAFBVV95cUxPSEJTUU1HSllBRS1hYUxLTGNzSGpQdEwzQVgyUnBnRmdUN1dRdmtUaGxMb2lEVHh2MjBOaUVfQk5Ed0tnaUduaFFxcXhPdnhRa1lCTFNRQjRUWk5URDhJeFVENWNJUUVEUnd4V0J0bDFpY3Z5Y09jc3NpRS0zZk5RVHBHNVlxM0Q0RGFXSExYN1YyRm5CeHdEZ3ZCUFJVV1VT?oc=5": {
+    "real_url": "https://apnews.com/article/russia-ukraine-war-kyiv-talks-abu-dhabi-b042adf1f95848f5d233da866a72e312",
+    "image": "https://dims.apnews.com/dims4/default/8ed5fd0/2147483647/strip/true/crop/8144x5424+0+0/resize/1200x799!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d",
+    "images": [
+      "https://dims.apnews.com/dims4/default/8ed5fd0/2147483647/strip/true/crop/8144x5424+0+0/resize/1200x799!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d",
+      "https://dims.apnews.com/dims4/default/23d2b26/2147483647/strip/true/crop/8140x5424+2+0/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d"
+    ],
+    "has_video": true,
+    "video_url": "https://www.youtube.com/embed/224Zx3_2bpg"
+  },
+  "https://news.google.com/rss/articles/CBMiogFBVV95cUxOZEdNVW9xb3BsRFNlejdiTkdkNV90dktPVGYtRHFhcFJFX3B5YnZwd0g1d1VPQXJxVldJOURWMUhZU2puQ3FiU3AwZmg3eG1zbGV0U3Y1Z0VvdTA2OWxMajhLb0hZVjBXTlRPUTNwQl9kNFZyTTFTcENFQ1hVZm1lZC1rNXRrTGNhR1EwVS0wWnJVeWxTNUtleHY0VWQ2TXI3Tmc?oc=5": {
+    "real_url": "https://www.theguardian.com/global-development/2026/nov/08/uyghurs-thailand-china-forced-deportation",
+    "image": "https://i.guim.co.uk/img/media/35edbd25132584ead100a994fe3243e80a1ce3f1/0_0_4132_3306/master/4132.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=4fa1a8b3cf4e2a78849c21902c5dbd10",
+    "images": [
+      "https://i.guim.co.uk/img/media/35edbd25132584ead100a994fe3243e80a1ce3f1/0_0_4132_3306/master/4132.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=4fa1a8b3cf4e2a78849c21902c5dbd10",
+      "https://i.guim.co.uk/img/media/35edbd25132584ead100a994fe3243e80a1ce3f1/0_0_4132_3306/master/4132.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&s=9b6949962b5e8c04259fed38959e7994"
+    ],
+    "has_video": true,
+    "video_url": "https://www.youtube.com/embed/ov7IhyM9Bls"
+  },
+  "https://apnews.com/article/russia-ukraine-war-kyiv-talks-abu-dhabi-b042adf1f95848f5d233da866a72e312": {
+    "real_url": "https://apnews.com/article/russia-ukraine-war-kyiv-talks-abu-dhabi-b042adf1f95848f5d233da866a72e312",
+    "image": "https://dims.apnews.com/dims4/default/8ed5fd0/2147483647/strip/true/crop/8144x5424+0+0/resize/1200x799!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d",
+    "images": [
+      "https://dims.apnews.com/dims4/default/8ed5fd0/2147483647/strip/true/crop/8144x5424+0+0/resize/1200x799!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d",
+      "https://dims.apnews.com/dims4/default/23d2b26/2147483647/strip/true/crop/8140x5424+2+0/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F9e%2Fac%2F41a2d1c14382aebcd5e1a8b34f26%2Fe15874faef924de6bb4ba0170c63852d"
+    ],
+    "has_video": true,
+    "video_url": "https://www.youtube.com/embed/224Zx3_2bpg"
   }
 }

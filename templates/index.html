@@ -36,6 +36,11 @@
 
     </script>
     <style>
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
         body {
             font-family: 'Kantumruy Pro', 'Inter', sans-serif;
             background-color: #0b0f19;
@@ -160,7 +165,7 @@
 
             <!-- Controls: Search, Alerts & Refresh -->
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <div class="relative hidden md:block w-56 lg:w-64">
+                <div class="relative hidden lg:block w-48 xl:w-64">
                     <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
                     <input 
                         type="text" 
@@ -178,7 +183,7 @@
                     title="មជ្ឈមណ្ឌលជូនដំណឹងបន្ទាន់ (Emergency Alert Center)"
                 >
                     <i data-lucide="bell" class="w-4 h-4 text-amber-400" id="notif-icon"></i>
-                    <span class="hidden sm:inline text-xs font-medium">ការជូនដំណឹង</span>
+                    <span class="hidden xl:inline text-xs font-medium">ការជូនដំណឹង</span>
                     <span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-900 animate-pulse">0</span>
                 </button>
 
@@ -190,7 +195,7 @@
                     title="បើកមើលលើទូរស័ព្ទដៃ ឬ iPad តាមរយៈ Wifi នៅផ្ទះ"
                 >
                     <i data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
-                    <span class="hidden sm:inline text-xs font-semibold">បើកលើទូរស័ព្ទ (Wifi)</span>
+                    <span class="hidden xl:inline text-xs font-semibold">បើកលើទូរស័ព្ទ (Wifi)</span>
                 </button>
 
                 <!-- Report Bug / Feedback Button -->
@@ -201,7 +206,7 @@
                     title="រាយការណ៍បញ្ហា ឬមតិយោបល់ (Report Bugs & Feedback)"
                 >
                     <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-400"></i>
-                    <span class="hidden md:inline text-xs font-semibold">រាយការណ៍បញ្ហា</span>
+                    <span class="hidden xl:inline text-xs font-semibold">រាយការណ៍បញ្ហា</span>
                 </button>
 
                 <!-- Setting Access Button -->
@@ -223,7 +228,7 @@
                     title="ផ្ទុកព័ត៌មានឡើងវិញ"
                 >
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refresh-icon"></i>
-                    <span class="hidden sm:inline">ផ្ទុកឡើងវិញ</span>
+                    <span class="hidden xl:inline text-xs font-medium">ផ្ទុកឡើងវិញ</span>
                 </button>
             </div>
         </div>
@@ -279,7 +284,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-8 overflow-x-hidden">
 
         <!-- Top Header Advertisement Banner (Admin Uploadable) -->
         <div id="ad-header-container" class="w-full hidden">
@@ -310,7 +315,7 @@
                 </div>
 
                 <!-- Scrolling Channel Track (Stops on hover, Channel pill enlarges, Click opens Live stream) -->
-                <div class="overflow-hidden flex-1 relative ml-3 live-ticker-wrapper" id="live-ticker-wrapper">
+                <div class="overflow-hidden flex-1 min-w-0 relative ml-2 sm:ml-3 live-ticker-wrapper" id="live-ticker-wrapper">
                     <div class="flex items-center space-x-2.5 live-ticker-track" id="live-ticker-track">
                         <!-- Channel pills injected by JS -->
                         <span class="text-xs text-slate-400">កំពុងទាញយកប៉ុស្តិ៍ផ្សាយផ្ទាល់...</span>
@@ -4172,14 +4177,10 @@ function filterAndRenderArticles() {
                 <button onclick="forwardAudio(10)" class="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer" title="ទៅមុខ ១០ វិនាទី (+10s)">
                     <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                 </button>
-                <button id="dock-speed-btn" onclick="cycleAudioSpeed()" class="hidden sm:inline-block text-[11px] font-mono font-bold text-cyan-300 px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition cursor-pointer" title="ល្បឿនអាន (Playback Speed)">
+                <button id="dock-speed-btn" onclick="cycleAudioSpeed()" class="inline-flex items-center justify-center text-[11px] font-mono font-bold text-cyan-300 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 hover:border-cyan-400 transition cursor-pointer shrink-0 shadow-sm" title="ល្បឿនអាន (Playback Speed: 1x, 1.25x, 1.5x, 2x)">
                     1x
                 </button>
-                <!-- Prominent Red Stop Button (ALWAYS VISIBLE on Mobile & Desktop) -->
-                <button onclick="closeAudioDock()" class="px-2.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center space-x-1 shadow-lg shadow-red-950/60 transition cursor-pointer shrink-0 border border-red-500" title="បិទការចាក់សំឡេង (Stop Audio)">
-                    <i data-lucide="square" class="w-3.5 h-3.5 fill-current"></i>
-                    <span>បិទ</span>
-                </button>
+                
             </div>
         </div>
 
