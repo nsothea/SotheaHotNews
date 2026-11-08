@@ -1863,31 +1863,50 @@ try:
 except Exception:
     pass
 
+
+def pre_warm_top_articles_audio(limit: int = 3):
+    """Pre-generates audio speech for top articles gently with pauses to avoid CPU/network spikes."""
+    try:
+        articles = ARTICLES_CACHE.get("data", [])
+        if not articles:
+            return
+        import tts_service
+        count = 0
+        for a in articles[:limit]:
+            try:
+                p = tts_service.get_article_audio_path(a, voice="piseth")
+                if p:
+                    count += 1
+                time.sleep(1.5)
+            except Exception:
+                pass
+        if count > 0:
+            print(f"[*] Pre-warmed speech audio for {count} top articles! Ready for instant playback.")
+    except Exception as e:
+        print(f"[!] Audio pre-warming exception: {e}", file=sys.stderr)
+
 def continuous_news_updater_worker(interval_seconds: int = 300):
     """Runs in background continuously even when browser is closed.
     Scrapes fresh news, translates, summarizes, downloads media, and enforces strict 7-day retention."""
     print(f"[*] Continuous Background News Updater started (Interval: {interval_seconds}s, Retention: 7 days)!")
     
-    # Warm up cache immediately in background if empty
-    if not ARTICLES_CACHE.get("data"):
-        try:
-            get_all_cached_news(force_refresh=True)
-        except Exception as e:
-            print(f"[!] Initial background news refresh error: {e}", file=sys.stderr)
+    # Do NOT block port-binding or spike CPU on container boot.
+    # Delay initial refresh by 45 seconds so Gunicorn binds port 5000/10000 and responds in <50ms instantly!
+    time.sleep(45)
 
     while True:
         try:
-            time.sleep(interval_seconds)
             now_str = datetime.datetime.now().strftime("%H:%M:%S")
             print(f"[{now_str}] [Continuous Background News Engine] Scraping feeds & updating 7-day news database...")
             get_all_cached_news(force_refresh=True)
+            threading.Thread(target=pre_warm_top_articles_audio, kwargs={"limit": 3}, daemon=True, name="AudioPreWarmer").start()
             try:
                 alert_watcher.prune_expired_alerts(max_age_days=7)
             except Exception:
                 pass
         except Exception as e:
             print(f"[!] Background news updater exception: {e}", file=sys.stderr)
-            time.sleep(15)
+        time.sleep(interval_seconds)
 
 _workers_started = False
 def init_background_workers():

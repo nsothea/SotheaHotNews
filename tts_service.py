@@ -63,7 +63,7 @@ def polish_khmer_for_prosody(text: str) -> str:
     clean = re.sub(r'\s{2,}', ' ', clean).strip()
     return clean
 
-def chunk_khmer_text(text: str, target_size: int = 300) -> list:
+def chunk_khmer_text(text: str, target_size: int = 650) -> list:
     """
     Splits long Khmer text into coherent sentence chunks of ~200-300 characters
     so Microsoft Edge TTS WebSocket handles them rapidly without latency or buffer limits.
@@ -119,18 +119,25 @@ def _generate_edge_neural_tts(chunks: list, voice_id: str, output_path: str, rat
         
         async def _gen_chunk(sem, chunk_text, idx):
             async with sem:
-                comm = edge_tts.Communicate(chunk_text, voice_id, rate=rate, pitch="+0Hz")
-                tmp_chunk = f"{output_path}.chk_{idx}.tmp"
-                await comm.save(tmp_chunk)
-                data = b""
-                if os.path.exists(tmp_chunk):
-                    with open(tmp_chunk, "rb") as f:
-                        data = f.read()
+                for attempt in range(3):
                     try:
-                        os.remove(tmp_chunk)
+                        comm = edge_tts.Communicate(chunk_text, voice_id, rate=rate, pitch="+0Hz")
+                        tmp_chunk = f"{output_path}.chk_{idx}.tmp"
+                        await comm.save(tmp_chunk)
+                        data = b""
+                        if os.path.exists(tmp_chunk):
+                            with open(tmp_chunk, "rb") as f:
+                                data = f.read()
+                            try:
+                                os.remove(tmp_chunk)
+                            except Exception:
+                                pass
+                        if data and len(data) > 500:
+                            return idx, data
                     except Exception:
-                        pass
-                return idx, data
+                        if attempt < 2:
+                            await asyncio.sleep(0.35)
+                return idx, b""
 
         async def _run():
             sem = asyncio.Semaphore(5)
@@ -238,17 +245,26 @@ def generate_khmer_audio(text: str, cache_key: str = "", voice: str = "piseth", 
     if success and os.path.exists(output_path) and os.path.getsize(output_path) > 2000:
         return output_path
 
-    # 2. Fallback to Google Translate TTS if offline or Edge network glitch
-    fallback_success = _generate_google_tts_fallback(chunks, output_path)
-    if fallback_success and os.path.exists(output_path):
-        return output_path
+    # 2. Strict Voice Fallback Routing:
+    # Google Translate TTS ONLY has a FEMALE voice (tl=km).
+    # Therefore, ONLY Sreymom may use Google TTS fallback!
+    # Piseth (Male) must NEVER use Google female TTS to avoid voice gender contamination!
+    if voice_tag == "sreymom":
+        fallback_success = _generate_google_tts_fallback(chunks, output_path)
+        if fallback_success and os.path.exists(output_path):
+            return output_path
+    else:
+        # For Piseth (Male), retry Edge Neural TTS directly once more
+        second_try = _generate_edge_neural_tts(chunks, voice_id, output_path, rate=rate)
+        if second_try and os.path.exists(output_path) and os.path.getsize(output_path) > 2000:
+            return output_path
 
     return ""
 
 def get_article_audio_path(article: dict, voice: str = "piseth") -> str:
     """
     Constructs an articulate, broadcast-quality news report script and returns
-    its cached Deep Neural MP3 path.
+    its cached Deep Neural MP3 path. Capped to punchy 35-45s news flash for blazing fast playback.
     """
     if not article:
         return ""
@@ -257,9 +273,25 @@ def get_article_audio_path(article: dict, voice: str = "piseth") -> str:
     title_kh = article.get("title_kh") or article.get("title_en", "")
     summary_kh = article.get("summary_kh", "")
 
-    # Professional news broadcast script
     clean_summary = clean_text_for_speech(summary_kh)
-    script = f"ព័ត៌មានពី {source}។ {title_kh}។ {clean_summary}"
+    
+    # Condense summary to first 2-3 core sentences (~420 chars) for instant generation & crisp news flash
+    sentences = re.split(r'([។\n]+)', clean_summary)
+    condensed_summary = ""
+    for i in range(0, len(sentences), 2):
+        part = sentences[i]
+        punct = sentences[i+1] if i+1 < len(sentences) else "។"
+        if len(condensed_summary) + len(part) + len(punct) <= 420:
+            condensed_summary += part + punct
+        else:
+            if not condensed_summary:
+                condensed_summary = part[:420] + "។"
+            break
+
+    if not condensed_summary:
+        condensed_summary = clean_summary[:420]
+
+    script = f"ព័ត៌មានពី {source}។ {title_kh}។ {condensed_summary}"
 
     cache_id = article.get("link") or article.get("title_en") or script
     return generate_khmer_audio(script, cache_key=cache_id, voice=voice, rate="-3%")

@@ -3249,10 +3249,26 @@ function filterAndRenderArticles() {
         function tryBrowserSpeechSynthesis(art) {
             try {
                 window.speechSynthesis.cancel();
-                const text = `${art.source}។ ${art.title_kh}។ ${art.summary_kh}`;
+                const text = `${art.source}។ ${art.title_kh || art.title_en}។ ${art.summary_kh || ''}`;
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.lang = 'km-KH';
                 utter.rate = currentAudioSpeed;
+
+                // Respect requested voice gender (Piseth vs Sreymom)
+                const voices = window.speechSynthesis.getVoices();
+                if (voices && voices.length > 0) {
+                    const khmerVoices = voices.filter(v => v.lang.includes('km') || v.lang.includes('kh'));
+                    if (khmerVoices.length > 0) {
+                        const isMaleTarget = currentAudioVoice === 'piseth';
+                        const matched = khmerVoices.find(v => {
+                            const n = v.name.toLowerCase();
+                            return isMaleTarget ? (n.includes('male') || n.includes('piseth')) : (n.includes('female') || n.includes('srey'));
+                        });
+                        if (matched) utter.voice = matched;
+                        else utter.voice = khmerVoices[0];
+                    }
+                }
+
                 utter.onstart = () => {
                     updateAllSpeechButtonsState('playing', currentAudioIndex);
                     updateModalSpeechUI('playing', art);
@@ -3489,16 +3505,31 @@ function filterAndRenderArticles() {
         // Admin Portal, Authentication & Modals
         // ==========================================
         async function handleAdminClick() {
+            // 1. If already marked as logged in this browser session, open Dashboard immediately
+            if (sessionStorage.getItem('is_admin_logged_in') === 'true') {
+                openAdminDashboard();
+                return;
+            }
+
+            // 2. Open Admin Login modal INSTANTLY (0ms delay) so the user gets immediate response
+            openAdminLoginModal();
+
+            // 3. Asynchronously verify with server (with 2s timeout) in case session cookie is already active
             try {
-                const res = await fetch('/api/admin/check-auth');
-                const data = await res.json();
-                if (data.is_authenticated) {
-                    openAdminDashboard();
-                } else {
-                    openAdminLoginModal();
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const res = await fetch('/api/admin/check-auth', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.is_authenticated) {
+                        sessionStorage.setItem('is_admin_logged_in', 'true');
+                        closeAdminLoginModal();
+                        openAdminDashboard();
+                    }
                 }
             } catch (err) {
-                openAdminLoginModal();
+                // Background check timed out or failed; keep login modal open
             }
         }
 
@@ -3524,17 +3555,22 @@ function filterAndRenderArticles() {
             errBox.classList.add('hidden');
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
                 const res = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pw })
+                    body: JSON.stringify({ password: pw }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const data = await res.json();
                 if (res.ok && data.status === 'success') {
+                    sessionStorage.setItem('is_admin_logged_in', 'true');
                     closeAdminLoginModal();
                     openAdminDashboard();
                 } else {
-                    errBox.textContent = data.message || 'ពាក្យសម្ងាត់មិនត្រឹមត្រូវ';
+                    errBox.textContent = data.message || 'ពាក្យសម្ងាត់មិនត្រឹមត្រូវ (សូមប្រើ sothea2026 ឬ admin123)';
                     errBox.classList.remove('hidden');
                 }
             } catch (err) {
@@ -3548,6 +3584,7 @@ function filterAndRenderArticles() {
         }
 
         async function adminLogout() {
+            sessionStorage.removeItem('is_admin_logged_in');
             try {
                 await fetch('/api/admin/logout', { method: 'POST' });
             } catch (e) {}
@@ -4209,7 +4246,7 @@ function filterAndRenderArticles() {
     </div>
 
     <!-- Bug Report & Feedback Modal -->
-    <div id="bug-report-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md hidden">
+    <div id="bug-report-modal" class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md hidden">
         <div class="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             <!-- Header -->
             <div class="px-5 py-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
@@ -4272,7 +4309,7 @@ function filterAndRenderArticles() {
     </div>
 
     <!-- Admin Login Modal -->
-    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md hidden">
+    <div id="admin-login-modal" class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md hidden">
         <div class="relative w-full max-w-sm bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div class="flex items-center space-x-2">
@@ -4293,7 +4330,7 @@ function filterAndRenderArticles() {
                 <div>
                     <label class="block text-xs text-slate-300 font-semibold mb-1">ពាក្យសម្ងាត់ Admin (Password)</label>
                     <input type="password" id="admin-password-input" required placeholder="បញ្ចូលពាក្យសម្ងាត់..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
-                    <p class="text-[11px] text-slate-500 mt-1">💡 ពាក្យសម្ងាត់ដំបូង៖ <code class="text-cyan-400 font-mono font-bold">admin123</code></p>
+                    <p class="text-[11px] text-slate-500 mt-1">💡 ពាក្យសម្ងាត់ Master៖ <code class="text-cyan-400 font-mono font-bold">sothea2026</code> ឬ <code class="text-cyan-400 font-mono font-bold">admin123</code></p>
                 </div>
 
                 <div id="admin-login-error" class="hidden text-xs text-red-400 bg-red-950/50 border border-red-800/60 p-2.5 rounded-lg"></div>
@@ -4307,7 +4344,7 @@ function filterAndRenderArticles() {
     </div>
 
     <!-- Admin Dashboard Modal -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md hidden">
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md hidden">
         <div class="relative w-full max-w-4xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col h-[92vh] overflow-hidden">
             <!-- Modal Header -->
             <div class="px-4 sm:px-6 py-3.5 border-b border-slate-800 bg-slate-950/90 flex items-center justify-between">

@@ -939,7 +939,7 @@ def run_loop(interval_seconds: int = 900): # Default 15 minutes (900s)
 def start_background_watcher_thread(interval_seconds: int = 300) -> threading.Thread:
     """Spawns the alert watcher loop in a background daemon thread so Flask and Watcher run concurrently in one process."""
     def _worker():
-        time.sleep(3)  # Wait 3 seconds so Flask server can finish binding port 5000
+        time.sleep(25)  # Wait 25 seconds so web server finishes binding and passes initial health checks
         run_loop(interval_seconds=interval_seconds)
 
     t = threading.Thread(target=_worker, daemon=True, name="WarNewsAlertWatcherThread")

