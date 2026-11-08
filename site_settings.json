@@ -1,0 +1,46 @@
+{
+  "admin_password_hash": "447ace821309e9d35392bf397a1c52a9f0546c6bf2e78106f40ee221fdbe691b",
+  "site_branding": {
+    "site_name": "SOTHEA HOT NEWS",
+    "site_tagline": "ព័ត៌មានទាន់ហេតុការណ៍អន្តរជាតិ (រូបភាព និងវីដេអូ ផ្សាយផ្ទាល់ ២៤/៧)",
+    "logo_url": "/uploads/logo_1794104984_536753.png"
+  },
+  "ads": {
+    "header_banner": {
+      "enabled": false,
+      "title": "Header Banner Test",
+      "image_url": "",
+      "link_url": ""
+    },
+    "in_article_banner": {
+      "enabled": false,
+      "title": "បដាក្នុងអត្ថបទ (In-Article Banner)",
+      "image_url": "",
+      "link_url": "",
+      "target": "_blank"
+    },
+    "sticky_bottom_banner": {
+      "enabled": false,
+      "title": "បដាអណ្ដែតខាងក្រោម (Sticky Bottom Banner)",
+      "image_url": "",
+      "link_url": "",
+      "target": "_blank"
+    },
+    "sidebar_banner": {
+      "enabled": false,
+      "title": "បដាចំហៀង (Sidebar Banner)",
+      "image_url": "",
+      "link_url": "",
+      "target": "_blank"
+    }
+  },
+  "announcement": {
+    "enabled": false,
+    "text": ""
+  },
+  "contact": {
+    "telegram": "@sotheanews",
+    "phone": "+855 668165",
+    "ad_inquiry_text": "ទំនាក់ទំនងផ្សព្វផ្សាយពាណិជ្ជកម្មតាមរយៈ Telegram ឬទូរស័ព្ទ"
+  }
+}
