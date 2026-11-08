@@ -75,9 +75,11 @@
             width: max-content;
             animation: liveTickerScroll 38s linear infinite;
         }
-        .live-ticker-wrapper:hover .live-ticker-track,
-        .live-ticker-track:hover {
-            animation-play-state: paused;
+        @media (hover: hover) and (pointer: fine) {
+            .live-ticker-wrapper:hover .live-ticker-track,
+            .live-ticker-track:hover {
+                animation-play-state: paused;
+            }
         }
         .live-channel-pill {
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.2s ease;
@@ -139,6 +141,10 @@
                         <span>បិទ</span>
                     </button>
                 </div>
+                <div id="live-sync-indicator" class="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-[10px] sm:text-xs text-emerald-300 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="live-sync-text">ផ្សាយផ្ទាល់ ២៤/៧</span>
+                </div>
                 <div class="hidden sm:flex items-center space-x-2 text-slate-400">
                     <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                     <span id="live-clock">--:--:--</span>
@@ -155,6 +161,32 @@
                     <i data-lucide="shield-alert" class="w-6 h-6 text-white" id="site-logo-default-icon"></i>
                     <img id="site-logo-img" src="" alt="Logo" class="w-full h-full object-cover hidden">
                 </div>
+                <script>
+                    (function() {
+                        try {
+                            var cachedLogo = localStorage.getItem('sothea_custom_logo');
+                            if (cachedLogo && cachedLogo.trim()) {
+                                var img = document.getElementById('site-logo-img');
+                                var icon = document.getElementById('site-logo-default-icon');
+                                if (img) {
+                                    img.src = cachedLogo;
+                                    img.classList.remove('hidden');
+                                }
+                                if (icon) icon.classList.add('hidden');
+                            }
+                            var cachedName = localStorage.getItem('sothea_site_name');
+                            if (cachedName) {
+                                var n = document.getElementById('site-name-display');
+                                if (n) n.textContent = cachedName;
+                            }
+                            var cachedTagline = localStorage.getItem('sothea_site_tagline');
+                            if (cachedTagline) {
+                                var t = document.getElementById('site-tagline-display');
+                                if (t) t.textContent = cachedTagline;
+                            }
+                        } catch(e) {}
+                    })();
+                </script>
                 <div>
                     <h1 class="font-bold text-lg leading-tight tracking-wide text-white" id="site-name-display">
                         SOTHEA <span class="text-red-500">HOT NEWS</span>
@@ -1137,6 +1169,8 @@
             }
         }
 
+        let heroHoverTimeout = null;
+
         function startHeroAutoSlide() {
             stopHeroAutoSlide();
             heroAutoTimer = setInterval(() => {
@@ -1160,26 +1194,36 @@
             const sec = document.getElementById('hero-carousel-section');
             if (!sec) return;
 
-            // Pause slightly when mouse enters, resume when mouse leaves
+            // Pause temporarily when mouse enters, but auto-resume after 6s even if mouse stays on banner
             sec.addEventListener('mouseenter', () => {
                 heroIsHovered = true;
+                if (heroHoverTimeout) clearTimeout(heroHoverTimeout);
+                heroHoverTimeout = setTimeout(() => {
+                    heroIsHovered = false;
+                }, 6000);
             });
             sec.addEventListener('mouseleave', () => {
                 heroIsHovered = false;
+                if (heroHoverTimeout) clearTimeout(heroHoverTimeout);
                 startHeroAutoSlide();
             });
 
-            // Touch Swipe Support for Phones and Tablets
+            // Touch Swipe Support for Phones and Tablets (never stays stuck on touch devices)
             let touchStartX = 0;
             let touchEndX = 0;
             sec.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
                 heroIsHovered = true;
+                if (heroHoverTimeout) clearTimeout(heroHoverTimeout);
+                heroHoverTimeout = setTimeout(() => {
+                    heroIsHovered = false;
+                }, 4000);
             }, { passive: true });
 
             sec.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].screenX;
                 heroIsHovered = false;
+                if (heroHoverTimeout) clearTimeout(heroHoverTimeout);
                 const diff = touchEndX - touchStartX;
                 if (Math.abs(diff) > 40) {
                     if (diff < 0) {
@@ -1187,9 +1231,14 @@
                     } else {
                         prevHeroSlide(true);
                     }
-                } else {
-                    startHeroAutoSlide();
                 }
+                startHeroAutoSlide();
+            }, { passive: true });
+
+            sec.addEventListener('touchcancel', () => {
+                heroIsHovered = false;
+                if (heroHoverTimeout) clearTimeout(heroHoverTimeout);
+                startHeroAutoSlide();
             }, { passive: true });
         }
 
@@ -1574,14 +1623,35 @@ function filterAndRenderArticles() {
             });
         }
 
-        // Fetch News Data
+        // Global function to update all relative time-ago strings in real-time
+        function updateAllTimeAgos() {
+            document.querySelectorAll('.article-time-ago').forEach(el => {
+                const ts = parseFloat(el.getAttribute('data-timestamp'));
+                const pub = el.getAttribute('data-pubdate');
+                const dt = ts ? new Date(ts * 1000) : (pub ? new Date(pub) : null);
+                if (dt && !isNaN(dt.getTime())) {
+                    el.textContent = formatTimeAgo(dt);
+                }
+            });
+        }
+        setInterval(updateAllTimeAgos, 30000);
+
+        // Fetch News Data with Live Visual Indicator
         async function fetchNews(forceRefresh = false) {
             const icon = document.getElementById('refresh-icon');
             if (icon) icon.classList.add('animate-spin');
+            
+            // Only show full loading block on initial empty load, never blank the page during background updates!
             const loadingState = document.getElementById('loading-state');
-            if (loadingState) loadingState.style.display = 'block';
+            if (loadingState && (!allArticles || allArticles.length === 0)) {
+                loadingState.style.display = 'block';
+            }
+
+            const syncText = document.getElementById('live-sync-text');
+            if (syncText) syncText.textContent = 'កំពុងពិនិត្យ...';
 
             try {
+                const prevCount = allArticles ? allArticles.length : 0;
                 const url = `/api/news?category=${currentCategory}&refresh=${forceRefresh}`;
                 const res = await fetch(url);
                 const data = await res.json();
@@ -1611,6 +1681,7 @@ function filterAndRenderArticles() {
                 filterAndRenderArticles();
                 renderHeroCarousel();
                 updateCategoryBadges();
+                updateAllTimeAgos();
                 
                 // Update ticker
                 if (allArticles.length > 0) {
@@ -1618,11 +1689,27 @@ function filterAndRenderArticles() {
                     const tickerEl = document.getElementById('ticker-text');
                     if (tickerEl) tickerEl.textContent = topItem.title_kh || topItem.title_en;
                 }
+
+                // If user clicked manual refresh, show feedback toast
+                if (forceRefresh && typeof showToast === 'function') {
+                    const diff = allArticles.length - prevCount;
+                    if (diff > 0) {
+                        showToast(`ទាញយកបានព័ត៌មានថ្មីចំនួន ${toKhmerNum(diff)} បន្ថែមទៀត!`, 'success');
+                    } else {
+                        showToast(`បានពិនិត្យរួចរាល់៖ លោកអ្នកកំពុងមើលព័ត៌មានថ្មីចុងក្រោយបង្អស់ (សរុប ${toKhmerNum(allArticles.length)} ព័ត៌មាន)`, 'info');
+                    }
+                }
             } catch (err) {
                 console.error("Error fetching news:", err);
             } finally {
                 if (icon) icon.classList.remove('animate-spin');
                 if (loadingState) loadingState.style.display = 'none';
+                if (syncText) {
+                    const now = new Date();
+                    const hh = String(now.getHours()).padStart(2, '0');
+                    const mm = String(now.getMinutes()).padStart(2, '0');
+                    syncText.textContent = `ទាន់ហេតុការណ៍ (${toKhmerNum(`${hh}:${mm}`)})`;
+                }
             }
         }
 
@@ -1775,7 +1862,7 @@ function filterAndRenderArticles() {
                                 <!-- Publication Date & Time -->
                                 <div class="flex items-center space-x-1.5 text-slate-300 font-medium min-w-0">
                                     <i data-lucide="clock" class="w-3.5 h-3.5 text-red-400 flex-shrink-0"></i>
-                                    <span class="truncate text-xs">${art.pubDate_kh || formatTimeAgo(art.pubDate)}</span>
+                                    <span class="truncate text-xs article-time-ago" data-timestamp="${art.timestamp || ''}" data-pubdate="${art.pubDate || ''}">${formatTimeAgo(art.timestamp ? art.timestamp * 1000 : art.pubDate)}</span>
                                 </div>
                                 
                                 <!-- Clean, Single Status Badge with whitespace-nowrap -->
@@ -1933,10 +2020,21 @@ function filterAndRenderArticles() {
                 .catch(() => {});
         }
 
-        // Auto Refresh every 3 minutes
+        // Auto Refresh every 60 seconds (1 minute) for live continuous updates
         setInterval(() => {
             fetchNews(false);
-        }, 180000);
+        }, 60000);
+
+        // Resume and refresh immediately when user unlocks phone/tablet or switches back to tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                heroIsHovered = false;
+                startHeroAutoSlide();
+                fetchNews(false);
+                pollRealtimeAlerts();
+                updateAllTimeAgos();
+            }
+        });
 
         // Gallery state variables
         let currentModalGallery = [];
@@ -3344,36 +3442,59 @@ function filterAndRenderArticles() {
                 if (data.status === 'success' && data.settings) {
                     siteSettings = data.settings;
                     applySiteSettings();
+                } else {
+                    applySiteSettings();
                 }
             } catch (err) {
                 console.error("Error loading site settings:", err);
+                applySiteSettings();
             }
         }
 
         function applySiteSettings() {
-            if (!siteSettings) return;
-            // 1. Logo & Branding
-            const b = siteSettings.site_branding || {};
+            const b = (siteSettings && siteSettings.site_branding) ? siteSettings.site_branding : {};
             const logoImg = document.getElementById('site-logo-img');
             const logoIcon = document.getElementById('site-logo-default-icon');
-            if (b.logo_url && b.logo_url.trim()) {
+            
+            // Priority: Server logo_url -> Server logo_data -> Browser localStorage
+            const serverLogo = (b.logo_url && b.logo_url.trim()) ? b.logo_url : (b.logo_data || '');
+            const cachedLogo = localStorage.getItem('sothea_custom_logo');
+            let activeLogo = serverLogo || cachedLogo || '';
+            
+            if (activeLogo && activeLogo.trim()) {
                 if (logoImg) {
-                    logoImg.src = b.logo_url;
+                    logoImg.src = activeLogo;
                     logoImg.classList.remove('hidden');
+                    logoImg.onerror = function() {
+                        console.warn("Logo failed to load from:", logoImg.src);
+                        const c = localStorage.getItem('sothea_custom_logo');
+                        if (c && c !== logoImg.src && c.startsWith('data:image')) {
+                            logoImg.src = c;
+                        } else {
+                            logoImg.classList.add('hidden');
+                            if (logoIcon) logoIcon.classList.remove('hidden');
+                        }
+                    };
                 }
                 if (logoIcon) logoIcon.classList.add('hidden');
+                try { localStorage.setItem('sothea_custom_logo', activeLogo); } catch(e) {}
             } else {
                 if (logoImg) logoImg.classList.add('hidden');
                 if (logoIcon) logoIcon.classList.remove('hidden');
             }
 
             const nameEl = document.getElementById('site-name-display');
-            if (nameEl && b.site_name) {
-                nameEl.textContent = b.site_name;
+            const activeName = (b.site_name && b.site_name.trim()) ? b.site_name : localStorage.getItem('sothea_site_name');
+            if (nameEl && activeName) {
+                nameEl.textContent = activeName;
+                try { localStorage.setItem('sothea_site_name', activeName); } catch(e) {}
             }
+            
             const taglineEl = document.getElementById('site-tagline-display');
-            if (taglineEl && b.site_tagline) {
-                taglineEl.textContent = b.site_tagline;
+            const activeTagline = (b.site_tagline && b.site_tagline.trim()) ? b.site_tagline : localStorage.getItem('sothea_site_tagline');
+            if (taglineEl && activeTagline) {
+                taglineEl.textContent = activeTagline;
+                try { localStorage.setItem('sothea_site_tagline', activeTagline); } catch(e) {}
             }
 
             // 2. Urgent Announcement
@@ -3629,10 +3750,13 @@ function filterAndRenderArticles() {
                     const s = data.settings;
                     // Branding
                     const b = s.site_branding || {};
-                    document.getElementById('admin-site-name-input').value = b.site_name || 'SOTHEA HOT NEWS';
-                    document.getElementById('admin-site-tagline-input').value = b.site_tagline || '';
-                    document.getElementById('admin-logo-url-input').value = b.logo_url || '';
-                    updateAdminLogoPreview(b.logo_url);
+                    const curLogo = b.logo_url || localStorage.getItem('sothea_custom_logo') || '';
+                    const curName = b.site_name || localStorage.getItem('sothea_site_name') || 'SOTHEA HOT NEWS';
+                    const curTagline = b.site_tagline || localStorage.getItem('sothea_site_tagline') || '';
+                    document.getElementById('admin-site-name-input').value = curName;
+                    document.getElementById('admin-site-tagline-input').value = curTagline;
+                    document.getElementById('admin-logo-url-input').value = curLogo;
+                    updateAdminLogoPreview(curLogo);
 
                     // Announcement
                     const a = s.announcement || {};
@@ -3665,6 +3789,43 @@ function filterAndRenderArticles() {
             }
         }
 
+        // Automatic Canvas Resizer & Instant Base64 Generator for zero-latency Render persistence
+        function handleAdminLogoFileSelected() {
+            const fileInput = document.getElementById('admin-logo-file-input');
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+            const file = fileInput.files[0];
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 180;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > h) {
+                        if (w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                    } else {
+                        if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    const dataUrl = canvas.toDataURL('image/png');
+                    document.getElementById('admin-logo-url-input').value = dataUrl;
+                    updateAdminLogoPreview(dataUrl);
+                    try { localStorage.setItem('sothea_custom_logo', dataUrl); } catch(err) {}
+                    showToast('បានជ្រើសរើសរូបភាព Logo រួចរាល់! ចុច "រក្សាទុក" ដើម្បីអនុវត្ត។', 'info');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         async function uploadAdminLogoFile() {
             const fileInput = document.getElementById('admin-logo-file-input');
             if (!fileInput || !fileInput.files || !fileInput.files[0]) {
@@ -3673,7 +3834,10 @@ function filterAndRenderArticles() {
             }
             const btn = document.getElementById('btn-upload-logo');
             btn.disabled = true;
-            btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Uploading...`;
+            btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> កំពុងផ្ទុកឡើង...`;
+
+            // Immediately trigger local preview and Base64 compression
+            handleAdminLogoFileSelected();
 
             const formData = new FormData();
             formData.append('image', fileInput.files[0]);
@@ -3686,10 +3850,12 @@ function filterAndRenderArticles() {
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'success') {
-                    document.getElementById('admin-logo-url-input').value = data.url;
-                    updateAdminLogoPreview(data.url);
+                    // Update input with the official saved path
+                    const savedUrl = data.url || '/uploads/site_logo.png';
+                    document.getElementById('admin-logo-url-input').value = savedUrl;
+                    updateAdminLogoPreview(savedUrl);
                     await saveLogoAndBrandingSettings();
-                    alert('បាន Upload Logo និងរក្សាទុកដោយជោគជ័យ!');
+                    showToast('បាន Upload Logo និងរក្សាទុកជោគជ័យ!', 'success');
                 } else {
                     alert('Upload បរាជ័យ៖ ' + (data.message || 'Error'));
                 }
@@ -3705,23 +3871,80 @@ function filterAndRenderArticles() {
         function resetToDefaultLogo() {
             if (confirm('តើអ្នកពិតជាចង់កំណត់ប្រើ Logo ដើមវិញមែនទេ?')) {
                 document.getElementById('admin-logo-url-input').value = '';
+                const fileInput = document.getElementById('admin-logo-file-input');
+                if (fileInput) fileInput.value = '';
                 updateAdminLogoPreview('');
+                try { localStorage.removeItem('sothea_custom_logo'); } catch(e) {}
                 saveLogoAndBrandingSettings();
             }
         }
 
         async function saveLogoAndBrandingSettings() {
+            let logoVal = document.getElementById('admin-logo-url-input').value.trim();
+            const fileInput = document.getElementById('admin-logo-file-input');
+
+            // If user selected a file but didn't click "Upload Logo ឥឡូវនេះ", auto upload/compress it
+            if ((!logoVal || (!logoVal.startsWith('data:image') && !logoVal.startsWith('/uploads/'))) && fileInput && fileInput.files && fileInput.files[0]) {
+                try {
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+                    formData.append('type', 'logo');
+                    const uploadRes = await fetch('/api/admin/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (uploadRes.ok && uploadData.status === 'success' && uploadData.url) {
+                        logoVal = uploadData.url;
+                        document.getElementById('admin-logo-url-input').value = logoVal;
+                    }
+                } catch(e) {
+                    console.warn("Auto-upload fallback notice:", e);
+                }
+            }
+
+            const siteName = document.getElementById('admin-site-name-input').value.trim() || 'SOTHEA HOT NEWS';
+            const siteTagline = document.getElementById('admin-site-tagline-input').value.trim();
+
             const payload = {
                 site_branding: {
-                    site_name: document.getElementById('admin-site-name-input').value,
-                    site_tagline: document.getElementById('admin-site-tagline-input').value,
-                    logo_url: document.getElementById('admin-logo-url-input').value
+                    site_name: siteName,
+                    site_tagline: siteTagline,
+                    logo_url: logoVal
                 },
                 announcement: {
                     enabled: document.getElementById('admin-announcement-enabled').checked,
-                    text: document.getElementById('admin-announcement-text').value
+                    text: document.getElementById('admin-announcement-text').value.trim()
                 }
             };
+
+            // 1. Immediately cache to browser localStorage so changes persist across close/reopen even offline
+            if (logoVal) {
+                try { localStorage.setItem('sothea_custom_logo', logoVal); } catch(e) {}
+            } else {
+                try { localStorage.removeItem('sothea_custom_logo'); } catch(e) {}
+            }
+            try { localStorage.setItem('sothea_site_name', siteName); } catch(e) {}
+            try { localStorage.setItem('sothea_site_tagline', siteTagline); } catch(e) {}
+
+            // Immediately update live header display
+            const logoImg = document.getElementById('site-logo-img');
+            const logoIcon = document.getElementById('site-logo-default-icon');
+            if (logoVal) {
+                if (logoImg) {
+                    logoImg.src = logoVal;
+                    logoImg.classList.remove('hidden');
+                }
+                if (logoIcon) logoIcon.classList.add('hidden');
+            } else {
+                if (logoImg) logoImg.classList.add('hidden');
+                if (logoIcon) logoIcon.classList.remove('hidden');
+            }
+            const nameEl = document.getElementById('site-name-display');
+            if (nameEl) nameEl.textContent = siteName;
+            const taglineEl = document.getElementById('site-tagline-display');
+            if (taglineEl) taglineEl.textContent = siteTagline;
+
             try {
                 const res = await fetch('/api/admin/settings', {
                     method: 'POST',
@@ -3731,9 +3954,9 @@ function filterAndRenderArticles() {
                 const data = await res.json();
                 if (res.ok && data.status === 'success') {
                     await loadSiteSettings();
-                    showToast('បានរក្សាទុកផ្លាកសញ្ញា & ព័ត៌មានជោគជ័យ!', 'success');
+                    showToast('បានរក្សាទុកផ្លាកសញ្ញា & ព័ត៌មានជោគជ័យជាអចិន្ត្រៃយ៍!', 'success');
                 } else {
-                    alert('បរាជ័យក្នុងការរក្សាទុក៖ ' + data.message);
+                    alert('បរាជ័យក្នុងការរក្សាទុក៖ ' + (data.message || 'Error'));
                 }
             } catch (err) {
                 alert('កំហុសបណ្តាញ៖ ' + err.message);
@@ -4420,12 +4643,12 @@ function filterAndRenderArticles() {
 
                             <div class="flex-1 space-y-3 w-full">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-300 mb-1">ជ្រើសរើសឯកសាររូបភាព Logo</label>
-                                    <input type="file" id="admin-logo-file-input" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer">
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1">ជ្រើសរើសឯកសាររូបភាព Logo (ជ្រើសរួច Preview ភ្លាមៗ)</label>
+                                    <input type="file" id="admin-logo-file-input" accept="image/*" onchange="handleAdminLogoFileSelected()" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-300 mb-1">ឬបញ្ចូលតំណភ្ជាប់រូបភាព Logo ផ្ទាល់ (Image URL)</label>
-                                    <input type="text" id="admin-logo-url-input" placeholder="https://... ឬ /uploads/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1">ឬបញ្ចូលតំណភ្ជាប់រូបភាព Logo ផ្ទាល់ (Image URL ឬ Base64)</label>
+                                    <input type="text" id="admin-logo-url-input" oninput="updateAdminLogoPreview(this.value)" placeholder="https://... ឬ /uploads/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <button type="button" onclick="uploadAdminLogoFile()" id="btn-upload-logo" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow">

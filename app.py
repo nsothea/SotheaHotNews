@@ -1329,7 +1329,7 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
     now = time.time()
     has_target = target_category == "all" or any(a.get("category") == target_category for a in ARTICLES_CACHE.get("data", []))
     # Cache hit for 4 minutes
-    if not force_refresh and (now - ARTICLES_CACHE["timestamp"] < 240) and ARTICLES_CACHE["data"] and has_target:
+    if not force_refresh and (now - ARTICLES_CACHE["timestamp"] < 90) and ARTICLES_CACHE["data"] and has_target:
         return ARTICLES_CACHE["data"]
         
     all_articles = []
@@ -1351,8 +1351,12 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
         existing_others = [a for a in ARTICLES_CACHE.get("data", []) if a.get("category") != target_category]
         all_articles.extend(existing_others)
 
+    # Merge newly scraped articles with existing historical articles so no past stories are dropped
+    existing_historical = ARTICLES_CACHE.get("data", []) or load_news_database()
+    combined_pool = all_articles + (existing_historical if isinstance(existing_historical, list) else [])
+    
     # Strictly deduplicate across all categories using intelligent news cluster deduplication
-    deduped = deduplicate_news_cluster(all_articles)
+    deduped = deduplicate_news_cluster(combined_pool)
 
     # Inject breaking war alerts from alert_watcher so that ANY article popping in notifications is guaranteed on the page
     try:
@@ -1706,7 +1710,10 @@ def api_network_info():
 
 @app.route("/uploads/<path:filename>")
 def serve_uploads(filename):
-    """Serves user-uploaded logos and banner images directly."""
+    """Serves user-uploaded logos and banner images directly with self-healing fallback."""
+    target = os.path.join(admin_service.UPLOAD_DIR, filename)
+    if not os.path.exists(target):
+        admin_service.ensure_logo_file()
     return send_from_directory(admin_service.UPLOAD_DIR, filename)
 
 @app.route("/api/report-bug", methods=["POST"])
@@ -1885,7 +1892,7 @@ def pre_warm_top_articles_audio(limit: int = 3):
     except Exception as e:
         print(f"[!] Audio pre-warming exception: {e}", file=sys.stderr)
 
-def continuous_news_updater_worker(interval_seconds: int = 300):
+def continuous_news_updater_worker(interval_seconds: int = 180):
     """Runs in background continuously even when browser is closed.
     Scrapes fresh news, translates, summarizes, downloads media, and enforces strict 7-day retention."""
     print(f"[*] Continuous Background News Updater started (Interval: {interval_seconds}s, Retention: 7 days)!")
@@ -1915,7 +1922,7 @@ def init_background_workers():
         _workers_started = True
         try:
             alert_watcher.start_background_watcher_thread(interval_seconds=300)
-            threading.Thread(target=continuous_news_updater_worker, kwargs={"interval_seconds": 300}, daemon=True, name="ContinuousNewsUpdater").start()
+            threading.Thread(target=continuous_news_updater_worker, kwargs={"interval_seconds": 180}, daemon=True, name="ContinuousNewsUpdater").start()
             threading.Thread(target=auto_refresh_live_streams_worker, daemon=True, name="LiveStreamAutoRefresher").start()
             tunnel_manager.start_tunnel_in_background(port=int(os.environ.get("PORT", 5000)))
         except Exception as e:

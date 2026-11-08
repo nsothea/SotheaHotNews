@@ -5,6 +5,9 @@ echo ========================================================
 echo   SOTHEA HOT NEWS - UPLOADING CODE TO GITHUB...
 echo ========================================================
 echo.
+cd /d "D:\AI_Project\News"
+"C:\Program Files\Git\cmd\git.exe" add admin_service.py app.py site_settings.json templates/index.html uploads/site_logo.png uploads/site_logo_256.png tts_service.py
+"C:\Program Files\Git\cmd\git.exe" commit -m "Update SotheaHotNews: Logo, Layout, and Voice fixes"
 "C:\Program Files\Git\cmd\git.exe" push -u origin main
 echo.
 if %errorlevel% equ 0 (

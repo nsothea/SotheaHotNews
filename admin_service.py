@@ -80,8 +80,27 @@ DEFAULT_SETTINGS = {
     }
 }
 
+def ensure_logo_file():
+    """Self-healing: Restores uploads/site_logo.png from site_settings.json if file is missing."""
+    try:
+        target = os.path.join(UPLOAD_DIR, "site_logo.png")
+        if not os.path.exists(target) and os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            b = data.get("site_branding", {})
+            logo_data = b.get("logo_data", "")
+            if logo_data and logo_data.startswith("data:image/"):
+                import base64
+                header, b64str = logo_data.split(",", 1)
+                with open(target, "wb") as f_out:
+                    f_out.write(base64.b64decode(b64str))
+                print("[✓] Self-healed uploads/site_logo.png from site_settings.json!")
+    except Exception as e:
+        print(f"[!] ensure_logo_file warning: {e}")
+
 def load_settings() -> dict:
     """Loads site settings from JSON or creates with defaults."""
+    ensure_logo_file()
     if not os.path.exists(SETTINGS_FILE):
         save_settings(DEFAULT_SETTINGS)
         return DEFAULT_SETTINGS.copy()
@@ -132,8 +151,18 @@ def change_admin_password(new_password: str) -> bool:
 def get_public_settings() -> dict:
     """Returns safe settings for public visitors (omitting password hash)."""
     settings = load_settings()
+    branding = settings.get("site_branding", {}).copy()
+    target_logo = os.path.join(UPLOAD_DIR, "site_logo.png")
+    
+    # If site_logo.png exists, prefer /uploads/site_logo.png
+    if os.path.exists(target_logo):
+        branding["logo_url"] = "/uploads/site_logo.png"
+    elif branding.get("logo_data"):
+        # Fallback to self-contained Base64 if file on disk is wiped by Render
+        branding["logo_url"] = branding["logo_data"]
+        
     return {
-        "site_branding": settings.get("site_branding", {}),
+        "site_branding": branding,
         "ads": settings.get("ads", {}),
         "announcement": settings.get("announcement", {}),
         "contact": settings.get("contact", {})
@@ -143,13 +172,39 @@ def update_site_settings(new_data: dict) -> dict:
     """Updates allowed site settings (branding, ads, announcement, contact)."""
     settings = load_settings()
     if "site_branding" in new_data:
-        settings["site_branding"] = {**settings.get("site_branding", {}), **new_data["site_branding"]}
+        branding = new_data["site_branding"].copy()
+        raw_logo = branding.get("logo_url", "").strip()
+        
+        # If user provided a Base64 Data URL, decode and save to uploads/site_logo.png
+        if raw_logo and raw_logo.startswith("data:image/"):
+            try:
+                import base64
+                header, b64str = raw_logo.split(",", 1)
+                disk_path = os.path.join(UPLOAD_DIR, "site_logo.png")
+                with open(disk_path, "wb") as f:
+                    f.write(base64.b64decode(b64str))
+                branding["logo_data"] = raw_logo
+                branding["logo_url"] = "/uploads/site_logo.png"
+            except Exception as e:
+                print(f"[!] Error decoding base64 logo: {e}")
+        elif raw_logo == "":
+            # Explicit reset to default
+            branding["logo_url"] = ""
+            branding["logo_data"] = ""
+            disk_path = os.path.join(UPLOAD_DIR, "site_logo.png")
+            if os.path.exists(disk_path):
+                try: os.remove(disk_path)
+                except Exception: pass
+                
+        settings["site_branding"] = {**settings.get("site_branding", {}), **branding}
+        
     if "ads" in new_data:
         settings["ads"] = {**settings.get("ads", {}), **new_data["ads"]}
     if "announcement" in new_data:
         settings["announcement"] = {**settings.get("announcement", {}), **new_data["announcement"]}
     if "contact" in new_data:
         settings["contact"] = {**settings.get("contact", {}), **new_data["contact"]}
+        
     save_settings(settings)
     return get_public_settings()
 
@@ -160,7 +215,7 @@ def is_allowed_file(filename: str) -> bool:
 def save_uploaded_image(file_obj, upload_type: str = "banner") -> str:
     """
     Saves an uploaded image file securely and returns its public URL path.
-    e.g. /uploads/logo_1731000000_icon.png
+    For logo, saves permanently to /uploads/site_logo.png and syncs base64 to site_settings.json.
     """
     if not file_obj or not file_obj.filename:
         raise ValueError("No file uploaded")
@@ -170,12 +225,33 @@ def save_uploaded_image(file_obj, upload_type: str = "banner") -> str:
         raise ValueError(f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}")
     
     ext = filename.rsplit(".", 1)[1].lower()
-    ts = int(time.time())
-    safe_name = f"{upload_type}_{ts}_{os.urandom(3).hex()}.{ext}"
-    target_path = os.path.join(UPLOAD_DIR, safe_name)
-    file_obj.save(target_path)
     
-    return f"/uploads/{safe_name}"
+    if upload_type == "logo":
+        safe_name = "site_logo.png"
+        target_path = os.path.join(UPLOAD_DIR, safe_name)
+        file_obj.save(target_path)
+        
+        # Also sync Base64 data URL into site_settings.json for 100% Render persistence
+        try:
+            import base64
+            with open(target_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+            mime = f"image/{ext}" if ext != "jpg" else "image/jpeg"
+            data_uri = f"data:{mime};base64,{b64}"
+            settings = load_settings()
+            settings.setdefault("site_branding", {})["logo_url"] = f"/uploads/{safe_name}"
+            settings["site_branding"]["logo_data"] = data_uri
+            save_settings(settings)
+        except Exception as e:
+            print(f"[!] Error generating logo base64: {e}")
+            
+        return f"/uploads/{safe_name}"
+    else:
+        ts = int(time.time())
+        safe_name = f"{upload_type}_{ts}_{os.urandom(3).hex()}.{ext}"
+        target_path = os.path.join(UPLOAD_DIR, safe_name)
+        file_obj.save(target_path)
+        return f"/uploads/{safe_name}"
 
 # ==========================================
 # Bug Reporting & Feedback Management
