@@ -7,6 +7,8 @@ import threading
 
 TUNNEL_URL = ""
 _process = None
+_tunnel_started = False
+_tunnel_lock = threading.Lock()
 
 def get_tunnel_url() -> str:
     global TUNNEL_URL
@@ -30,9 +32,14 @@ def kill_orphan_cloudflared():
         pass
 
 def start_tunnel_in_background(port: int = 5000) -> threading.Thread:
-    global TUNNEL_URL, _process
+    global TUNNEL_URL, _process, _tunnel_started
     if os.environ.get("RENDER"):
         return None
+    with _tunnel_lock:
+        if _tunnel_started:
+            return None
+        _tunnel_started = True
+
     cloudflared_bin = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin", "cloudflared.exe")
     if not os.path.exists(cloudflared_bin):
         return None

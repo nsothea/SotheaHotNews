@@ -1314,7 +1314,9 @@ def fetch_category_news(category_key: str, count: int = 12):
                     return None
 
             if gnews_raw:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(gnews_raw), 6)) as pool:
+                is_render = bool(os.environ.get("RENDER"))
+                max_subworkers = min(len(gnews_raw), 2) if is_render else min(len(gnews_raw), 6)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max_subworkers) as pool:
                     gnews_resolved = [r for r in pool.map(process_gnews, gnews_raw) if r is not None]
                     items.extend(gnews_resolved)
 
@@ -1325,20 +1327,22 @@ def fetch_category_news(category_key: str, count: int = 12):
     items.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
     return items
 
-def get_all_cached_news(force_refresh: bool = False, target_category: str = "all"):
+_NEWS_SCRAPE_LOCK = threading.Lock()
+_IS_NEWS_SCRAPING = False
+
+def _execute_full_news_scrape(target_category: str = "all") -> list:
+    """Performs full background scraping pipeline, merges with alerts, enforces 7-day retention, and updates ARTICLES_CACHE and news_database.json."""
     now = time.time()
-    has_target = target_category == "all" or any(a.get("category") == target_category for a in ARTICLES_CACHE.get("data", []))
-    # Cache hit for 4 minutes
-    if not force_refresh and (now - ARTICLES_CACHE["timestamp"] < 90) and ARTICLES_CACHE["data"] and has_target:
-        return ARTICLES_CACHE["data"]
-        
+    is_render = bool(os.environ.get("RENDER"))
     all_articles = []
     if target_category != "all" and target_category in CONFLICT_CATEGORIES:
         cats_to_fetch = [target_category]
     else:
         cats_to_fetch = ["all", "ukraine", "middle_east", "sudan", "myanmar", "thailand", "nuclear"]
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cats_to_fetch)) as executor:
+    # On Render, limit category worker concurrency to 2 to stay well within 512MB RAM
+    worker_count = min(2, len(cats_to_fetch)) if is_render else min(5, len(cats_to_fetch))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
         future_to_cat = {executor.submit(fetch_category_news, k, 12): k for k in cats_to_fetch}
         for future in concurrent.futures.as_completed(future_to_cat):
             try:
@@ -1365,7 +1369,6 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
         seen_titles = set(re.sub(r'[^a-zA-Z0-9]', '', a.get("title_en", "").lower()) for a in deduped if a.get("title_en"))
         for al in hot_alerts:
             t_low = (al.get("title_en", "") + " " + al.get("title_kh", "")).lower()
-            # Strictly filter out test alerts, dummy internal notifications, or test desk items
             if al.get("is_test") or "actively monitoring" in t_low or "alert system online" in t_low or al.get("source") == "Sothea Hot News Desk" or "localhost:5000" in al.get("link", ""):
                 continue
 
@@ -1402,7 +1405,6 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
 
             pub_dt_obj = datetime.datetime.fromtimestamp(ts_val, tz=timezone.utc)
 
-            # 1. Authentic Real Newsroom Photos & Media: extract directly from original publisher
             from media_extractor import extract_real_article_media
 
             orig_link = al.get("link", "")
@@ -1415,12 +1417,11 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
             real_link = media_info.get("real_url") or orig_link
 
             if not alert_img or any(bad in str(alert_img).lower() for bad in ["faaz-missile", "avenger-counter-drone", "three-brits-rescued", "next-gen-tanker"]):
-                continue  # Skip alert if no authentic publisher photo
+                continue
 
             if not alert_images:
                 alert_images = [alert_img] if alert_img else []
 
-            # 2. Guarantee Full In-Depth 3-Paragraph Report (ដូចក្នុងរូបទី២ ទាំងស្រុង)
             existing_summary = al.get("summary_kh", "").strip()
             paras = [p.strip() for p in existing_summary.split("\n\n") if p.strip()]
             if len(paras) < 3:
@@ -1488,10 +1489,60 @@ def get_all_cached_news(force_refresh: bool = False, target_category: str = "all
     # Strictly prioritize breaking alerts, then sort newest first
     deduped.sort(key=lambda x: float(x.get("timestamp", 0)), reverse=True)
 
-    ARTICLES_CACHE["data"] = deduped
-    ARTICLES_CACHE["timestamp"] = now
-    save_news_database(deduped)
+    if deduped:
+        ARTICLES_CACHE["data"] = deduped
+        ARTICLES_CACHE["timestamp"] = now
+        save_news_database(deduped)
     return deduped
+
+def trigger_background_news_refresh(target_category: str = "all") -> bool:
+    """Triggers non-blocking background feed scraper thread to keep cache fresh without freezing visitor requests."""
+    global _IS_NEWS_SCRAPING
+    with _NEWS_SCRAPE_LOCK:
+        if _IS_NEWS_SCRAPING:
+            return False
+        _IS_NEWS_SCRAPING = True
+
+    def _worker():
+        global _IS_NEWS_SCRAPING
+        try:
+            _execute_full_news_scrape(target_category)
+        except Exception as e:
+            print(f"[!] Background news refresh error: {e}", file=sys.stderr)
+        finally:
+            _IS_NEWS_SCRAPING = False
+
+    t = threading.Thread(target=_worker, daemon=True, name="BackgroundNewsRefresher")
+    t.start()
+    return True
+
+def get_all_cached_news(force_refresh: bool = False, target_category: str = "all") -> list:
+    """
+    STALE-WHILE-REVALIDATE High Performance Cache:
+    1. Returns instantly (<10ms) whenever cached articles exist.
+    2. Never blocks mobile, tablet, or web clients with 60-second synchronous web scrapes.
+    3. Triggers background updates automatically when cache exceeds 180 seconds or upon force_refresh.
+    """
+    now = time.time()
+    cached = ARTICLES_CACHE.get("data")
+    
+    # 1. Memory Cache Hit: Return immediately!
+    if cached and len(cached) > 0:
+        cache_age = now - ARTICLES_CACHE.get("timestamp", 0)
+        if force_refresh or cache_age > 180:
+            trigger_background_news_refresh(target_category)
+        return cached
+
+    # 2. Disk Database Hit: Load from news_database.json and return immediately!
+    disk_db = load_news_database()
+    if disk_db and len(disk_db) > 0:
+        ARTICLES_CACHE["data"] = disk_db
+        ARTICLES_CACHE["timestamp"] = now
+        trigger_background_news_refresh(target_category)
+        return disk_db
+
+    # 3. Cold Fallback: Only on absolute first boot with zero historical data
+    return _execute_full_news_scrape(target_category)
 
 FALLBACK_NEWS_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%"><rect width="800" height="450" fill="#0f172a"/><circle cx="400" cy="200" r="48" fill="#ef4444" opacity="0.2"/><path d="M400 170v60M370 200h60" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/><text x="400" y="290" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="18" font-weight="600" text-anchor="middle">Sothea Hot News</text></svg>"""
 
@@ -1905,7 +1956,7 @@ def continuous_news_updater_worker(interval_seconds: int = 180):
         try:
             now_str = datetime.datetime.now().strftime("%H:%M:%S")
             print(f"[{now_str}] [Continuous Background News Engine] Scraping feeds & updating 7-day news database...")
-            get_all_cached_news(force_refresh=True)
+            _execute_full_news_scrape(target_category="all")
             threading.Thread(target=pre_warm_top_articles_audio, kwargs={"limit": 3}, daemon=True, name="AudioPreWarmer").start()
             try:
                 alert_watcher.prune_expired_alerts(max_age_days=7)
