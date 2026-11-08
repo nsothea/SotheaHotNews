@@ -265,55 +265,99 @@
             </div>
         </div>
 
-        <!-- Category Tabs -->
-        <div class="border-t border-slate-800/80 bg-slate-900/50">
+        <!-- Category Tabs (Main Navigation) -->
+        <div class="border-t border-slate-800/80 bg-slate-900/50 backdrop-blur-md">
             <div class="max-w-7xl mx-auto px-4 flex items-center space-x-1.5 overflow-x-auto py-2 scrollbar-none">
+                <!-- 1. ព័ត៌មានអន្តរជាតិ (Default / All) -->
                 <button onclick="setCategory('all')" data-cat="all" class="cat-btn active relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-red-600 text-white flex items-center space-x-1.5 shadow-sm">
                     <i data-lucide="globe" class="w-4 h-4 text-cyan-300 flex-shrink-0"></i>
-                    <span>ព័ត៌មានទាំងអស់</span>
+                    <span>ព័ត៌មានអន្តរជាតិ</span>
                     <span id="cat-badge-all" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('nuclear')" data-cat="nuclear" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-amber-400 hover:bg-slate-800 hover:text-amber-300 flex items-center space-x-1.5 border border-amber-500/30">
-                    <span class="text-sm flex-shrink-0 animate-pulse">☢️</span>
-                    <span>សន្តិសុខនុយក្លេអ៊ែរ</span>
-                    <span id="cat-badge-nuclear" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 2. ព័ត៌មានជាតិ -->
+                <button onclick="setCategory('national')" data-cat="national" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
+                    <img src="https://flagcdn.com/w40/kh.png" alt="KH" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
+                    <span>ព័ត៌មានជាតិ</span>
+                    <span id="cat-badge-national" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-blue-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('thailand')" data-cat="thailand" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
-                    <img src="https://flagcdn.com/w40/th.png" alt="TH" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
-                    <span>ក្នុងស្រុកថៃ</span>
-                    <span id="cat-badge-thailand" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 3. នយោបាយ -->
+                <button onclick="setCategory('politics')" data-cat="politics" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-400 flex-shrink-0"></i>
+                    <span>នយោបាយ</span>
+                    <span id="cat-badge-politics" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-indigo-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('ukraine')" data-cat="ukraine" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
-                    <img src="https://flagcdn.com/w40/ua.png" alt="UA" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
-                    <span>អ៊ុយក្រែន-រុស្ស៊ី</span>
-                    <span id="cat-badge-ukraine" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 4. សេដ្ឋកិច្ច -->
+                <button onclick="setCategory('economy')" data-cat="economy" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                    <span>សេដ្ឋកិច្ច</span>
+                    <span id="cat-badge-economy" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('middle_east')" data-cat="middle_east" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
-                    <img src="https://flagcdn.com/w40/il.png" alt="IL" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
-                    <span>ជម្លោះមជ្ឈិមបូព៌ា</span>
-                    <span id="cat-badge-middle_east" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 5. យុទ្ធសាស្ត្រ និងសន្តិសុខ -->
+                <button onclick="setCategory('security')" data-cat="security" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-amber-400 hover:bg-slate-800 hover:text-amber-300 flex items-center space-x-1.5 border border-amber-500/30">
+                    <span class="text-sm flex-shrink-0">🪖</span>
+                    <span>យុទ្ធសាស្ត្រ និងសន្តិសុខ</span>
+                    <span id="cat-badge-security" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('sudan')" data-cat="sudan" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
-                    <img src="https://flagcdn.com/w40/sd.png" alt="SD" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
-                    <span>សង្គ្រាមស៊ូដង់</span>
-                    <span id="cat-badge-sudan" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 6. បច្ចេកវិទ្យា -->
+                <button onclick="setCategory('tech')" data-cat="tech" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="cpu" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
+                    <span>បច្ចេកវិទ្យា</span>
+                    <span id="cat-badge-tech" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-cyan-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
-                <button onclick="setCategory('myanmar')" data-cat="myanmar" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
-                    <img src="https://flagcdn.com/w40/mm.png" alt="MM" class="w-4 h-3 object-cover rounded-xs shadow-sm inline-block flex-shrink-0">
-                    <span>ជម្លោះមីយ៉ាន់ម៉ា</span>
-                    <span id="cat-badge-myanmar" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
+                <!-- 7. បរិស្ថាន និងអាកាសធាតុ -->
+                <button onclick="setCategory('environment')" data-cat="environment" class="cat-btn relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="leaf" class="w-4 h-4 text-lime-400 flex-shrink-0"></i>
+                    <span>បរិស្ថាន និងអាកាសធាតុ</span>
+                    <span id="cat-badge-environment" class="hidden absolute -top-1.5 -right-1 min-w-[18px] h-[18px] px-1 bg-lime-500 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">1</span>
                 </button>
+                <!-- 8. ព័ត៌មានសប្ដាហ៍នេះ -->
                 <button onclick="setTimeScope('week')" id="cat-tab-week" class="cat-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-cyan-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5 border border-cyan-500/40">
                     <i data-lucide="calendar" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
                     <span>ព័ត៌មានសប្ដាហ៍នេះ</span>
                 </button>
+                <!-- 9. ផ្សាយផ្ទាល់ ២៤/៧ -->
                 <button onclick="showVideoTab()" data-cat="videos" class="cat-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-amber-400 hover:bg-slate-800 hover:text-amber-300 flex items-center space-x-1.5">
                     <i data-lucide="video" class="w-4 h-4 text-red-500 flex-shrink-0"></i>
-                    <span>វីដេអូផ្សាយផ្ទាល់ (Live)</span>
+                    <span>ផ្សាយផ្ទាល់ ២៤/៧</span>
                 </button>
             </div>
         </div>
-    </header>
+
+        <!-- Sub-filters Bar for Strategy & Security (Toggles automatically) -->
+        <div id="security-subfilters-bar" class="hidden border-t border-slate-800/60 bg-slate-950/80 py-1.5 px-4 transition duration-300">
+            <div class="max-w-7xl mx-auto flex items-center space-x-2 overflow-x-auto scrollbar-none text-xs">
+                <span class="text-slate-400 font-semibold shrink-0 flex items-center space-x-1.5 pr-1 border-r border-slate-800">
+                    <i data-lucide="crosshair" class="w-3.5 h-3.5 text-red-500"></i>
+                    <span>សមរភូមិ៖</span>
+                </span>
+                <button onclick="setSecuritySubfilter('security')" class="sec-sub-btn active px-2.5 py-1 rounded-md font-medium transition bg-red-600 text-white shrink-0 shadow-sm" data-sub="security">ទាំងអស់</button>
+                <button onclick="setSecuritySubfilter('ukraine')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1" data-sub="ukraine">
+                    <img src="https://flagcdn.com/w40/ua.png" alt="UA" class="w-3.5 h-2.5 object-cover rounded-xs">
+                    <span>អ៊ុយក្រែន-រុស្ស៊ី</span>
+                </button>
+                <button onclick="setSecuritySubfilter('middle_east')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1" data-sub="middle_east">
+                    <img src="https://flagcdn.com/w40/il.png" alt="IL" class="w-3.5 h-2.5 object-cover rounded-xs">
+                    <span>មជ្ឈិមបូព៌ា</span>
+                </button>
+                <button onclick="setSecuritySubfilter('myanmar')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1" data-sub="myanmar">
+                    <img src="https://flagcdn.com/w40/mm.png" alt="MM" class="w-3.5 h-2.5 object-cover rounded-xs">
+                    <span>មីយ៉ាន់ម៉ា</span>
+                </button>
+                <button onclick="setSecuritySubfilter('sudan')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1" data-sub="sudan">
+                    <img src="https://flagcdn.com/w40/sd.png" alt="SD" class="w-3.5 h-2.5 object-cover rounded-xs">
+                    <span>ស៊ូដង់</span>
+                </button>
+                <button onclick="setSecuritySubfilter('thailand')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1" data-sub="thailand">
+                    <img src="https://flagcdn.com/w40/th.png" alt="TH" class="w-3.5 h-2.5 object-cover rounded-xs">
+                    <span>ក្នុងស្រុកថៃ</span>
+                </button>
+                <button onclick="setSecuritySubfilter('nuclear')" class="sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-amber-400 hover:bg-slate-800 border border-amber-500/30 shrink-0 flex items-center space-x-1" data-sub="nuclear">
+                    <span>☢️</span>
+                    <span>សន្តិសុខនុយក្លេអ៊ែរ</span>
+                </button>
+            </div>
+        </div>
+        </header>
 
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-8 overflow-x-hidden">
@@ -327,6 +371,36 @@
                 <a id="ad-header-link" href="#" target="_blank" rel="noopener noreferrer" class="block w-full">
                     <img id="ad-header-img" src="" alt="Advertisement" class="w-full h-auto max-h-36 sm:max-h-44 object-contain mx-auto transition duration-300 hover:opacity-95">
                 </a>
+            </div>
+        </div>
+
+        <!-- Quick Market & Weather Glance Bar -->
+        <div class="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl p-2.5 px-4 backdrop-blur-md shadow-lg flex items-center justify-between flex-wrap gap-2 text-xs">
+            <div class="flex items-center space-x-2.5 overflow-x-auto scrollbar-none py-0.5">
+                <!-- Weather Widget -->
+                <div class="flex items-center space-x-1.5 text-slate-200 font-medium shrink-0 bg-slate-800/70 px-2.5 py-1 rounded-xl border border-slate-700/50">
+                    <span class="text-amber-400 text-sm">🌤️</span>
+                    <span>រាជធានីភ្នំពេញ <strong class="text-white font-bold">32°C</strong> (ពពកតិចតួច)</span>
+                </div>
+                <!-- USD to KHR Exchange -->
+                <div class="flex items-center space-x-1.5 text-slate-200 font-medium shrink-0 bg-slate-800/70 px-2.5 py-1 rounded-xl border border-slate-700/50">
+                    <span class="text-emerald-400 font-bold">💵</span>
+                    <span>$1 = <strong class="text-emerald-400 font-bold">4,050 ៛</strong></span>
+                </div>
+                <!-- Gold Price -->
+                <div class="flex items-center space-x-1.5 text-slate-200 font-medium shrink-0 bg-slate-800/70 px-2.5 py-1 rounded-xl border border-slate-700/50">
+                    <span class="text-amber-300">🪙</span>
+                    <span>មាស: <strong class="text-amber-300 font-bold">$2,735</strong>/oz</span>
+                </div>
+                <!-- Oil Price -->
+                <div class="flex items-center space-x-1.5 text-slate-200 font-medium shrink-0 bg-slate-800/70 px-2.5 py-1 rounded-xl border border-slate-700/50">
+                    <span class="text-cyan-400">⛽</span>
+                    <span>ប្រេង Brent: <strong class="text-cyan-400 font-bold">$74.20</strong></span>
+                </div>
+            </div>
+            <div class="hidden lg:flex items-center space-x-1.5 text-slate-400 text-[11px] shrink-0 font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>ទីផ្សារ & អាកាសធាតុទាន់ហេតុការណ៍</span>
             </div>
         </div>
 
@@ -1572,13 +1646,15 @@ function filterAndRenderArticles() {
         function updateCategoryBadges() {
             const counts = {
                 all: 0,
-                nuclear: 0,
-                thailand: 0,
-                ukraine: 0,
-                middle_east: 0,
-                sudan: 0,
-                myanmar: 0
+                national: 0,
+                politics: 0,
+                economy: 0,
+                security: 0,
+                tech: 0,
+                environment: 0
             };
+
+            const secCats = new Set(['security', 'ukraine', 'middle_east', 'sudan', 'myanmar', 'nuclear', 'thailand']);
 
             let todayCount = 0;
             let weekCount = 0;
@@ -1593,11 +1669,10 @@ function filterAndRenderArticles() {
                 if (isArtNew(art)) {
                     counts.all++;
                     const c = art.category;
-                    if (counts[c] !== undefined) {
+                    if (secCats.has(c) || art.is_nuclear) {
+                        counts.security++;
+                    } else if (counts[c] !== undefined) {
                         counts[c]++;
-                    }
-                    if (art.is_nuclear && c !== 'nuclear') {
-                        counts.nuclear++;
                     }
                 }
             });
@@ -1608,7 +1683,7 @@ function filterAndRenderArticles() {
             const bWeek = document.getElementById('badge-week-count');
             if (bWeek) bWeek.textContent = weekCount;
 
-            const cats = ['all', 'nuclear', 'thailand', 'ukraine', 'middle_east', 'sudan', 'myanmar'];
+            const cats = ['all', 'national', 'politics', 'economy', 'security', 'tech', 'environment'];
             cats.forEach(c => {
                 const badgeEl = document.getElementById(`cat-badge-${c}`);
                 if (badgeEl) {
@@ -1623,7 +1698,6 @@ function filterAndRenderArticles() {
             });
         }
 
-        // Global function to update all relative time-ago strings in real-time
         function updateAllTimeAgos() {
             document.querySelectorAll('.article-time-ago').forEach(el => {
                 const ts = parseFloat(el.getAttribute('data-timestamp'));
@@ -1801,18 +1875,30 @@ function filterAndRenderArticles() {
                             <span class="whitespace-nowrap">នុយក្លេអ៊ែរ</span>
                         </span>
                     `;
-                } else if (isThai) {
-                    imagePill = `
-                        <span class="bg-blue-600 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow flex items-center space-x-1">
-                            ${flagImg}
-                            <span class="whitespace-nowrap">ក្នុងស្រុកថៃ</span>
-                        </span>
-                    `;
                 } else {
+                    let catBadgeColor = 'bg-slate-900/90 text-white border-slate-700/60';
+                    let catIcon = '';
+                    if (art.category === 'national') {
+                        catBadgeColor = 'bg-blue-600/95 text-white border-blue-400';
+                    } else if (art.category === 'politics') {
+                        catBadgeColor = 'bg-indigo-600/95 text-white border-indigo-400';
+                    } else if (art.category === 'economy') {
+                        catBadgeColor = 'bg-emerald-600/95 text-white border-emerald-400';
+                    } else if (art.category === 'tech') {
+                        catBadgeColor = 'bg-cyan-600/95 text-white border-cyan-400';
+                    } else if (art.category === 'environment') {
+                        catBadgeColor = 'bg-lime-600/95 text-slate-950 font-bold border-lime-400';
+                    } else if (isThai) {
+                        catBadgeColor = 'bg-blue-600/95 text-white border-blue-400';
+                    } else if (['security', 'ukraine', 'middle_east', 'sudan', 'myanmar'].includes(art.category)) {
+                        catBadgeColor = 'bg-red-600/95 text-white border-red-400';
+                        catIcon = '🪖 ';
+                    }
+
                     imagePill = `
-                        <span class="bg-slate-900/90 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full shadow border border-slate-700/60 flex items-center space-x-1.5">
+                        <span class="${catBadgeColor} backdrop-blur-md text-[11px] font-medium px-2.5 py-0.5 rounded-full shadow border flex items-center space-x-1.5">
                             ${flagImg}
-                            <span class="whitespace-nowrap">${art.category_kh || 'សង្គ្រាម'}</span>
+                            <span class="whitespace-nowrap">${catIcon}${art.category_kh || 'ព័ត៌មាន'}</span>
                         </span>
                     `;
                 }
@@ -1967,23 +2053,51 @@ function filterAndRenderArticles() {
         }
 
         // Switch Category
+        function setSecuritySubfilter(sub) {
+            document.querySelectorAll('.sec-sub-btn').forEach(b => {
+                if (b.getAttribute('data-sub') === sub) {
+                    b.className = "sec-sub-btn active px-2.5 py-1 rounded-md font-medium transition bg-red-600 text-white shrink-0 shadow-sm";
+                } else {
+                    b.className = "sec-sub-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white shrink-0 flex items-center space-x-1";
+                }
+            });
+            setCategory(sub);
+        }
+
         function setCategory(cat) {
             currentCategory = cat;
             document.querySelectorAll('.cat-btn').forEach(btn => {
-                if (btn.getAttribute('data-cat') === cat) {
+                const bCat = btn.getAttribute('data-cat');
+                if (bCat === cat || (cat in {'ukraine':1, 'middle_east':1, 'sudan':1, 'myanmar':1, 'thailand':1, 'nuclear':1} && bCat === 'security')) {
                     btn.className = "cat-btn active px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap bg-red-600 text-white flex items-center space-x-1.5 shadow-sm";
                 } else {
                     btn.className = "cat-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-1.5";
                 }
             });
 
-            // Update title with country flags
+            // Toggle Strategy & Security Subfilters Bar
+            const secBar = document.getElementById('security-subfilters-bar');
+            if (secBar) {
+                if (cat === 'security' || ['ukraine', 'middle_east', 'sudan', 'myanmar', 'thailand', 'nuclear'].includes(cat)) {
+                    secBar.classList.remove('hidden');
+                } else {
+                    secBar.classList.add('hidden');
+                }
+            }
+
+            // Update title with category names and icons
             const names = {
-                'all': { title: 'ព័ត៌មានសង្គ្រាមទាន់ហេតុការណ៍ (Latest Reports)', icon: '<i data-lucide="newspaper" class="w-5 h-5 text-red-500"></i>' },
-                'nuclear': { title: 'តាមដានសន្តិសុខនុយក្លេអ៊ែរ និងអាវុធប្រល័យលោក (Nuclear Security Radar)', icon: '<span class="text-base animate-pulse">☢️</span>' },
-                'thailand': { title: 'ព័ត៌មានក្នុងស្រុក និងសន្តិសុខថៃ (Thailand Domestic & Border News)', icon: '<img src="https://flagcdn.com/w40/th.png" alt="TH" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
+                'all': { title: 'ព័ត៌មានអន្តរជាតិទាន់ហេតុការណ៍ (International Breaking News)', icon: '<i data-lucide="globe" class="w-5 h-5 text-cyan-400"></i>' },
+                'national': { title: 'ព័ត៌មានជាតិ និងព្រឹត្តិការណ៍សង្គមកម្ពុជា (Cambodia National News)', icon: '<img src="https://flagcdn.com/w40/kh.png" alt="KH" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
+                'politics': { title: 'នយោបាយ និងការទូតពិភពលោក (Global Politics & Diplomacy)', icon: '<i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>' },
+                'economy': { title: 'សេដ្ឋកិច្ច ទីផ្សារហិរញ្ញវត្ថុ និងពាណិជ្ជកម្ម (Economy & Business)', icon: '<i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>' },
+                'security': { title: 'យុទ្ធសាស្ត្រ សន្តិសុខ និងសមរភូមិសង្គ្រាម (Strategy & Security)', icon: '<span class="text-base">🪖</span>' },
+                'tech': { title: 'បច្ចេកវិទ្យា បញ្ញាសិប្បនិម្មិត (AI) & នវានុវត្តន៍ (Technology & Innovation)', icon: '<i data-lucide="cpu" class="w-5 h-5 text-cyan-400"></i>' },
+                'environment': { title: 'បរិស្ថាន អាកាសធាតុ និងគ្រោះធម្មជាតិ (Environment & Climate)', icon: '<i data-lucide="leaf" class="w-5 h-5 text-lime-400"></i>' },
                 'ukraine': { title: 'សមរភូមិអ៊ុយក្រែន និងរុស្ស៊ី (Ukraine-Russia War)', icon: '<img src="https://flagcdn.com/w40/ua.png" alt="UA" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
                 'middle_east': { title: 'ជម្លោះតំបន់មជ្ឈិមបូព៌ា (Israel-Iran-Lebanon)', icon: '<img src="https://flagcdn.com/w40/il.png" alt="IL" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
+                'nuclear': { title: 'តាមដានសន្តិសុខនុយក្លេអ៊ែរ និងអាវុធប្រល័យលោក (Nuclear Security Radar)', icon: '<span class="text-base animate-pulse">☢️</span>' },
+                'thailand': { title: 'ព័ត៌មានក្នុងស្រុក និងសន្តិសុខថៃ (Thailand Domestic News)', icon: '<img src="https://flagcdn.com/w40/th.png" alt="TH" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
                 'sudan': { title: 'សង្គ្រាមស៊ីវិលនៅស៊ូដង់ (Sudan War)', icon: '<img src="https://flagcdn.com/w40/sd.png" alt="SD" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' },
                 'myanmar': { title: 'ជម្លោះប្រដាប់អាវុធនៅមីយ៉ាន់ម៉ា (Myanmar Conflict)', icon: '<img src="https://flagcdn.com/w40/mm.png" alt="MM" class="w-5 h-3.5 object-cover rounded-xs shadow-sm inline-block">' }
             };
@@ -1993,6 +2107,7 @@ function filterAndRenderArticles() {
                 <span>${catInfo.title}</span>
             `;
 
+            lucide.createIcons();
             fetchNews(false);
         }
 

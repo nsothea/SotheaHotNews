@@ -169,13 +169,20 @@ def auto_refresh_live_streams_worker():
         time.sleep(7200) # Re-check every 2 hours
 
 CONFLICT_CATEGORIES = {
-    "all": {"title_kh": "ព័ត៌មានទាំងអស់", "query": "breaking war Ukraine OR Israel Gaza Lebanon Iran OR Sudan war OR nuclear weapon when:1d", "flag_url": ""},
-    "nuclear": {"title_kh": "សន្តិសុខនុយក្លេអ៊ែរ", "query": "nuclear weapon OR nuclear war OR nuclear strike OR Iran nuclear OR Russia nuclear doctrine when:2d", "flag_url": ""},
-    "thailand": {"title_kh": "ព័ត៌មានក្នុងស្រុកថៃ", "query": "Thailand (politics OR military OR border OR government OR security OR diplomacy) when:1d", "flag_url": "https://flagcdn.com/w40/th.png"},
-    "ukraine": {"title_kh": "សង្គ្រាមរុស្ស៊ី-អ៊ុយក្រែន", "query": "Ukraine war OR Russia strikes OR Kyiv OR Kharkiv OR Russian troops when:1d", "flag_url": "https://flagcdn.com/w40/ua.png"},
+    "all": {"title_kh": "ព័ត៌មានអន្តរជាតិ", "query": "breaking world news OR international news when:1d", "flag_url": ""},
+    "national": {"title_kh": "ព័ត៌មានជាតិ", "query": "Cambodia (news OR government OR Phnom Penh OR national) when:2d", "flag_url": "https://flagcdn.com/w40/kh.png"},
+    "politics": {"title_kh": "នយោបាយ", "query": "world politics OR diplomacy OR government OR summit OR election when:1d", "flag_url": ""},
+    "economy": {"title_kh": "សេដ្ឋកិច្ច", "query": "global economy OR trade OR inflation OR markets OR Federal Reserve OR oil price when:1d", "flag_url": ""},
+    "security": {"title_kh": "យុទ្ធសាស្ត្រ និងសន្តិសុខ", "query": "war Ukraine OR Israel Gaza Iran OR military security OR nuclear weapon OR Sudan war OR Myanmar when:1d", "flag_url": ""},
+    "tech": {"title_kh": "បច្ចេកវិទ្យា", "query": "technology OR artificial intelligence OR AI OR semiconductor OR cyber security when:2d", "flag_url": ""},
+    "environment": {"title_kh": "បរិស្ថាន និងអាកាសធាតុ", "query": "climate change OR weather OR typhoon OR environment OR flood when:2d", "flag_url": ""},
+    # Sub-categories for Security & Region
+    "ukraine": {"title_kh": "អ៊ុយក្រែន-រុស្ស៊ី", "query": "Ukraine war OR Russia strikes OR Kyiv OR Russian troops when:1d", "flag_url": "https://flagcdn.com/w40/ua.png"},
     "middle_east": {"title_kh": "ជម្លោះមជ្ឈិមបូព៌ា", "query": "Israel Gaza OR Israel Lebanon OR Iran strikes OR Red Sea Houthis when:1d", "flag_url": "https://flagcdn.com/w40/il.png"},
-    "sudan": {"title_kh": "សង្គ្រាមស៊ីវិលស៊ូដង់", "query": "Sudan war OR Sudanese army OR RSF clashes OR Darfur fighting when:2d", "flag_url": "https://flagcdn.com/w40/sd.png"},
-    "myanmar": {"title_kh": "ជម្លោះប្រដាប់អាវុធមីយ៉ាន់ម៉ា", "query": "Myanmar conflict OR Myanmar junta OR Myanmar rebel fighting when:2d", "flag_url": "https://flagcdn.com/w40/mm.png"}
+    "nuclear": {"title_kh": "សន្តិសុខនុយក្លេអ៊ែរ", "query": "nuclear weapon OR nuclear war OR nuclear strike OR Iran nuclear when:2d", "flag_url": ""},
+    "thailand": {"title_kh": "ក្នុងស្រុកថៃ", "query": "Thailand (politics OR military OR border OR government OR security) when:1d", "flag_url": "https://flagcdn.com/w40/th.png"},
+    "myanmar": {"title_kh": "ជម្លោះមីយ៉ាន់ម៉ា", "query": "Myanmar conflict OR Myanmar junta OR Myanmar rebel fighting when:2d", "flag_url": "https://flagcdn.com/w40/mm.png"},
+    "sudan": {"title_kh": "សង្គ្រាមស៊ីវិលស៊ូដង់", "query": "Sudan war OR Sudanese army OR RSF clashes OR Darfur fighting when:2d", "flag_url": "https://flagcdn.com/w40/sd.png"}
 }
 
 # Major international feeds providing 100% authentic original newsroom photography
@@ -190,6 +197,30 @@ VERIFIED_CAT_PHOTOS = {
 }
 
 DIRECT_CATEGORY_FEEDS = {
+    "national": [
+        ("https://www.khmertimeskh.com/feed/", "Khmer Times", lambda t: True),
+        ("https://cambojanews.com/feed/", "CamboJA News", lambda t: True)
+    ],
+    "politics": [
+        ("https://www.france24.com/en/tag/politics/rss", "France 24", lambda t: True),
+        ("https://www.theguardian.com/politics/rss", "The Guardian", lambda t: True)
+    ],
+    "economy": [
+        ("https://www.cnbc.com/id/100003114/device/rss/rss.html", "CNBC", lambda t: True),
+        ("https://www.theguardian.com/business/economics/rss", "The Guardian", lambda t: True)
+    ],
+    "tech": [
+        ("https://feeds.arstechnica.com/arstechnica/index", "Ars Technica", lambda t: True),
+        ("https://www.theverge.com/rss/index.xml", "The Verge", lambda t: True)
+    ],
+    "environment": [
+        ("https://www.theguardian.com/environment/rss", "The Guardian", lambda t: True),
+        ("https://feeds.bbci.co.uk/news/science_and_environment/rss.xml", "BBC News", lambda t: True)
+    ],
+    "security": [
+        ("https://www.defenseone.com/rss/all/", "Defense One", lambda t: True),
+        ("https://www.twz.com/feed", "The War Zone", lambda t: True)
+    ],
     "middle_east": [
         ("https://www.france24.com/en/middle-east/rss", "France 24", lambda t: not any(bad in t.lower() for bad in ['football', 'soccer', 'tennis', 'champions league'])),
         ("https://www.theguardian.com/world/middleeast/rss", "The Guardian", lambda t: True),
@@ -1635,7 +1666,11 @@ def api_news():
     articles = get_all_cached_news(force_refresh=refresh, target_category=category)
     
     if category != "all":
-        filtered = [a for a in articles if a.get("category") == category]
+        if category == "security":
+            sec_cats = {"security", "ukraine", "middle_east", "sudan", "myanmar", "nuclear", "thailand"}
+            filtered = [a for a in articles if a.get("category") in sec_cats]
+        else:
+            filtered = [a for a in articles if a.get("category") == category]
     else:
         filtered = articles
         
@@ -1946,18 +1981,21 @@ def pre_warm_top_articles_audio(limit: int = 3):
 def continuous_news_updater_worker(interval_seconds: int = 180):
     """Runs in background continuously even when browser is closed.
     Scrapes fresh news, translates, summarizes, downloads media, and enforces strict 7-day retention."""
-    print(f"[*] Continuous Background News Updater started (Interval: {interval_seconds}s, Retention: 7 days)!")
+    is_render = bool(os.environ.get("RENDER"))
+    print(f"[*] Continuous Background News Updater started (Interval: {interval_seconds}s, Retention: 7 days, Render: {is_render})!")
     
     # Do NOT block port-binding or spike CPU on container boot.
-    # Delay initial refresh by 45 seconds so Gunicorn binds port 5000/10000 and responds in <50ms instantly!
-    time.sleep(45)
+    # Delay initial refresh by 90s on Render, 45s locally so Gunicorn binds port 5000/10000 and passes health check instantly!
+    time.sleep(90 if is_render else 45)
 
     while True:
         try:
             now_str = datetime.datetime.now().strftime("%H:%M:%S")
             print(f"[{now_str}] [Continuous Background News Engine] Scraping feeds & updating 7-day news database...")
             _execute_full_news_scrape(target_category="all")
-            threading.Thread(target=pre_warm_top_articles_audio, kwargs={"limit": 3}, daemon=True, name="AudioPreWarmer").start()
+            # Only pre-warm audio locally; on Render free tier (512MB RAM), skip to avoid OOM kills!
+            if not is_render:
+                threading.Thread(target=pre_warm_top_articles_audio, kwargs={"limit": 3}, daemon=True, name="AudioPreWarmer").start()
             try:
                 alert_watcher.prune_expired_alerts(max_age_days=7)
             except Exception:
@@ -1972,10 +2010,17 @@ def init_background_workers():
     if not _workers_started:
         _workers_started = True
         try:
-            alert_watcher.start_background_watcher_thread(interval_seconds=300)
-            threading.Thread(target=continuous_news_updater_worker, kwargs={"interval_seconds": 180}, daemon=True, name="ContinuousNewsUpdater").start()
-            threading.Thread(target=auto_refresh_live_streams_worker, daemon=True, name="LiveStreamAutoRefresher").start()
-            tunnel_manager.start_tunnel_in_background(port=int(os.environ.get("PORT", 5000)))
+            is_render = bool(os.environ.get("RENDER"))
+            watcher_interval = 600 if is_render else 300
+            updater_interval = 300 if is_render else 180
+            
+            alert_watcher.start_background_watcher_thread(interval_seconds=watcher_interval)
+            threading.Thread(target=continuous_news_updater_worker, kwargs={"interval_seconds": updater_interval}, daemon=True, name="ContinuousNewsUpdater").start()
+            
+            # YouTube streams & Cloudflare tunnel only run locally, NEVER on Render
+            if not is_render:
+                threading.Thread(target=auto_refresh_live_streams_worker, daemon=True, name="LiveStreamAutoRefresher").start()
+                tunnel_manager.start_tunnel_in_background(port=int(os.environ.get("PORT", 5000)))
         except Exception as e:
             print(f"[!] Warning starting background workers: {e}", file=sys.stderr)
 
